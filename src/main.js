@@ -7,50 +7,66 @@ import {initData} from "./data.js";
 import {processFormData} from "./lib/utils.js";
 
 import {initTable} from "./components/table.js";
-// @todo: подключение
 import {initSearching} from "./components/searching.js";
 import {initFiltering} from "./components/filtering.js";
 import {initSorting} from "./components/sorting.js";
 import {initPagination} from "./components/pagination.js";
 
-// Исходные данные используемые в render()
-const {data, ...indexes} = initData(sourceData);
+const api = initData(sourceData);
 
 /**
- * Сбор и обработка полей из таблицы
  * @returns {Object}
  */
 function collectState() {
-    const state = processFormData(new FormData(sampleTable.container));
-    
-    const rowsPerPage = parseInt(state.rowsPerPage);
-    const page = parseInt(state.page ?? 1);
-
-    return {
-        ...state,
-        rowsPerPage,
-        page
-    };
+    try {
+        const formData = new FormData(sampleTable.container);
+        const state = processFormData(formData);
+        
+        const pageInput = sampleTable.container.querySelector('input[name="page"]:checked');
+        const pageValue = pageInput ? parseInt(pageInput.value) : 1;
+        
+        return {
+            search: '',
+            searchBySeller: '',
+            rowsPerPage: 10,
+            page: pageValue,
+            ...state,
+            rowsPerPage: parseInt(state.rowsPerPage || 10),
+            page: parseInt(state.page || pageValue || 1)
+        };
+    } catch (error) {
+        console.error('Error collecting state:', error);
+        return {
+            search: '',
+            searchBySeller: '',
+            rowsPerPage: 10,
+            page: 1
+        };
+    }
 }
 
 /**
- * Перерисовка состояния таблицы при любых изменениях
  * @param {HTMLButtonElement?} action
  */
-function render(action) {
-    let state = collectState(); // состояние полей из таблицы
-    let result = [...data]; // копируем для последующего изменения
-    // @todo: использование
-    result = applySearching(result, state, action);
-    result = applyFiltering(result, state, action);
-    result = applySorting(result, state, action);
-    result = applyPagination(result, state, action);
+async function render(action) {
+    let state = collectState();
+    let query = {};
+    
+    query = applySearching(query, state, action);
+    query = applyFiltering(query, state, action);
+    query = applySorting(query, state, action);
+    query = applyPagination(query, state, action);
 
-    sampleTable.render(result)
+    const { total, items } = await api.getRecords(query);
+    
+    updatePagination(total, query);
+
+    sampleTable.render(items);
 }
 
-// Инициализация модулей
-let applySearching, applyFiltering, applySorting, applyPagination;
+let applySearching, applySorting;
+let applyFiltering, updateIndexes;
+let applyPagination, updatePagination;
 
 const sampleTable = initTable({
     tableTemplate: 'table',
@@ -59,28 +75,44 @@ const sampleTable = initTable({
     after: ['pagination']
 }, render);
 
-// @todo: инициализация
-applySearching = initSearching('search');
-applyFiltering = initFiltering(sampleTable.filter.elements, {
-    searchBySeller: indexes.sellers
+async function init() {
+    const indexes = await api.getIndexes();
+    
+    applySearching = initSearching('search');
+    
+    const filtering = initFiltering(sampleTable.filter.elements);
+    applyFiltering = filtering.applyFiltering;
+    updateIndexes = filtering.updateIndexes;
+    
+    applySorting = initSorting([
+        sampleTable.header.elements.sortByDate,
+        sampleTable.header.elements.sortByTotal
+    ]);
+    
+    const pagination = initPagination(
+        sampleTable.pagination.elements,
+        (el, page, isCurrent) => {
+            const input = el.querySelector('input');
+            const label = el.querySelector('span');
+            input.value = page;
+            input.checked = isCurrent;
+            label.textContent = page;
+            return el;
+        }
+    );
+    applyPagination = pagination.applyPagination;
+    updatePagination = pagination.updatePagination;
+
+    updateIndexes(sampleTable.filter.elements, {
+        searchBySeller: indexes.sellers
+    });
+
+    const appRoot = document.querySelector('#app');
+    appRoot.appendChild(sampleTable.container);
+
+    render();
+}
+
+init().catch(error => {
+    console.error('Failed to initialize app:', error);
 });
-applySorting = initSorting([
-    sampleTable.header.elements.sortByDate,
-    sampleTable.header.elements.sortByTotal
-]);
-applyPagination = initPagination(
-    sampleTable.pagination.elements,
-    (el, page, isCurrent) => {
-        const input = el.querySelector('input');
-        const label = el.querySelector('span');
-        input.value = page;
-        input.checked = isCurrent;
-        label.textContent = page;
-        return el;
-    }
-);
-
-const appRoot = document.querySelector('#app');
-appRoot.appendChild(sampleTable.container);
-
-render();
