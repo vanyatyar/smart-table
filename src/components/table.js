@@ -20,9 +20,7 @@ export function initTable(settings, onAction) {
         root.container.append(root[subName].container);
     });
 
-    root.container.addEventListener('change', () => {
-        onAction();
-    });
+    root.container.addEventListener("change", onAction);
 
     root.container.addEventListener('reset', (e) => {
         e.preventDefault();
