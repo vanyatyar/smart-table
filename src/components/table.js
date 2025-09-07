@@ -29,6 +29,8 @@ export function initTable(settings, onAction) {
 
     root.container.addEventListener('submit', (e) => {
         e.preventDefault();
+        e.submitter.setAttribute('name', 'clear');
+
         onAction(e.submitter);
     });
 

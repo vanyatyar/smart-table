@@ -35,13 +35,11 @@ export const initPagination = ({pages, fromRow, toRow, totalRows}, createPage) =
                     break;
             }
         }
-
         return Object.assign({}, query, {
             limit,
             page
         });
     }
-
     const updatePagination = (total, {page, limit}) => {
         pageCount = Math.ceil(total / limit) || 1;
         const currentPage = Math.min(Math.max(page || 1, 1), pageCount);
@@ -53,10 +51,8 @@ export const initPagination = ({pages, fromRow, toRow, totalRows}, createPage) =
         });
         
         pages.replaceChildren(...pageElements);
-
         const startIndex = (currentPage - 1) * limit;
         const endIndex = Math.min(startIndex + limit, total);
-        
         fromRow.textContent = total > 0 ? startIndex + 1 : 0;
         toRow.textContent = endIndex;
         totalRows.textContent = total;

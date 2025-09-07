@@ -17,7 +17,10 @@ export function initFiltering(elements) {
     }
 
     const applyFiltering = (query, state, action) => {
+ console.log('action:', action);
+    console.log('action.name:', action?.name);
         if (action && action.name === 'clear') {
+
             const field = action.dataset.field;
             const parent = action.closest('.filter-field');
             const input = parent.querySelector('input');
@@ -32,11 +35,13 @@ export function initFiltering(elements) {
         Object.keys(elements).forEach(key => {
             if (elements[key]) {
                 if (['INPUT', 'SELECT'].includes(elements[key].tagName) && elements[key].value) {
+
                     filter[`filter[${elements[key].name}]`] = elements[key].value;
                 }
             }
         });
 
+    
         return Object.keys(filter).length ? Object.assign({}, query, filter) : query;
     }
 
