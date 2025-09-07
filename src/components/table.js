@@ -23,7 +23,6 @@ export function initTable(settings, onAction) {
     root.container.addEventListener("change", onAction);
 
     root.container.addEventListener('reset', (e) => {
-        e.preventDefault();
         setTimeout(onAction);
     });
 

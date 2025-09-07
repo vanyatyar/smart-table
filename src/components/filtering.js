@@ -22,7 +22,7 @@ export function initFiltering(elements) {
         if (action && action.name === 'clear') {
 
             const field = action.dataset.field;
-            const parent = action.closest('.filter-field');
+            const parent = action.closest('.filter-wrapper');
             const input = parent.querySelector('input');
             
             if (input) {

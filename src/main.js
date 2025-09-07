@@ -9,6 +9,7 @@ import {initSearching} from "./components/searching.js";
 import {initFiltering} from "./components/filtering.js";
 import {initSorting} from "./components/sorting.js";
 import {initPagination} from "./components/pagination.js";
+
 const api = initData();
 
 /**
@@ -18,6 +19,7 @@ function collectState() {
     try {
         const formData = new FormData(sampleTable.container);
         const state = processFormData(formData);
+        
         const pageInput = sampleTable.container.querySelector('input[name="page"]:checked');
         const pageValue = pageInput ? parseInt(pageInput.value) : 1;
         
@@ -108,6 +110,7 @@ async function init() {
 
     render();
 }
+
 init().catch(error => {
     console.error('Failed to initialize app:', error);
 });
